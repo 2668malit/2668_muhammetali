@@ -25,3 +25,9 @@ while True:
   oled.text(str(distance), 0, 35)
   oled.show()
   sleep(1)
+  
+  while True:
+    pot_res = pot.read()
+    print(pot_res)
+    sleep(0.2)
+  
