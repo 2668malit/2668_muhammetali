@@ -1,0 +1,31 @@
+int greenLed = 7;  // Yeşil LED için pin
+int redLed = 8;    // Kırmızı LED için pin
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(greenLed, OUTPUT);
+  pinMode(redLed, OUTPUT);
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char command = Serial.read();
+    
+    if (command == '0') {
+      digitalWrite(greenLed, LOW);
+      digitalWrite(redLed, LOW);
+    } 
+    else if (command == '1') {
+      digitalWrite(greenLed, LOW);
+      digitalWrite(redLed, HIGH);  // Kırmızı LED yanar (insan)
+    } 
+    else if (command == '2') {
+      digitalWrite(greenLed, HIGH);
+      digitalWrite(redLed, LOW);   // Yeşil LED yanar (araba)
+    } 
+    else if (command == '3') {
+      digitalWrite(greenLed, HIGH);
+      digitalWrite(redLed, HIGH);  // Her iki LED de yanar (insan + araba)
+    }
+  }
+}
