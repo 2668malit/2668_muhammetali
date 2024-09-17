@@ -1,0 +1,58 @@
+import cv2
+import serial
+from ultralytics import YOLO
+
+# YOLOv8 modelini yükleyin
+model = YOLO('yolov8n.pt')
+
+# ESP32 için seri portu açın (Baud rate ve portu ESP32 ayarlarınıza göre değiştirebilirsiniz)
+esp32 = serial.Serial('COM3', 9600)  # Windows için 'COMx', Linux için '/dev/ttyUSBx'
+
+# Video kaynağını açın (kamera veya bir video dosyası)
+cap = cv2.VideoCapture(0)  # Kameradan görüntü alacak, eğer video dosyası kullanmak isterseniz 'video.mp4' gibi değiştirin
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        print("Video akışı sona erdi.")
+        break
+
+    # YOLOv8 ile tespit
+    results = model(frame)
+
+    # Tespit edilen nesneler
+    detected_objects = results[0].names
+    labels = results[0].boxes.cls.tolist()
+
+    # Bayrakları sıfırla
+    car_detected = False
+    person_detected = False
+
+    # Tespit edilen nesneler arasında insan ve araba olup olmadığını kontrol et
+    for label in labels:
+        if detected_objects[int(label)] == 'car':
+            car_detected = True
+        elif detected_objects[int(label)] == 'person':
+            person_detected = True
+
+    # Duruma göre ESP32'ye sinyal gönder
+    if car_detected and person_detected:
+        esp32.write(b'both')  # Her iki LED de yanacak
+    elif car_detected:
+        esp32.write(b'car')  # Yeşil LED yanacak
+    elif person_detected:
+        esp32.write(b'person')  # Kırmızı LED yanacak
+    else:
+        esp32.write(b'none')  # Hiçbir LED yanmayacak
+
+    # Görüntüyü ekranda göster
+    cv2.imshow('Frame', frame)
+
+    # Çıkış için 'q' tuşuna basın
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Kaynakları serbest bırakın
+cap.release()
+cv2.destroyAllWindows()
+esp32.close()
